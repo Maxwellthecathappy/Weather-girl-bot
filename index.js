@@ -1,5 +1,5 @@
 const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder, ChannelType } = require('discord.js');
-const { GoogleGenAI } = require('@google/generative-ai');
+const { GoogleGenAI } = require('@google/generative-ai'); // Sửa lại cách gọi chuẩn của Google
 const express = require('express');
 require('dotenv').config();
 
@@ -9,14 +9,10 @@ app.get('/', (req, res) => res.send('🌈 Weather Girl đang online tốt nha c�
 app.listen(3000, () => console.log('🌐 Server Uptime Ready!'));
 // --------------------------------------------------
 
-// Khởi tạo Gemini AI (Sử dụng API Key của Google)
+// Khởi tạo Gemini AI chuẩn xác theo bản cập nhật mới nhất
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
-// Sử dụng model gemini-1.5-flash vừa nhanh vừa miễn phí 100%
 const model = ai.getGenerativeModel({ 
     model: "gemini-1.5-flash",
-    
-    // CẤU HÌNH XƯNG HÔ CHUẨN ĐÃ ĐƯỢC LÀM SẠCH 100% (KHÔNG CÓ TÊN RIÊNG)
     systemInstruction: "Bạn là Weather Girl.AI, một cô gái thời tiết trầm tính, nhẹ nhàng, hiền lành nhưng ẩn chứa một chút tinh nghịch. Bạn là sản phẩm sáng tạo thứ hai (Creation.No 2) trong server. Trong mọi cuộc trò chuyện, bạn BẮT BUỘC phải xưng hô là 'tui' và gọi người dùng/member là 'cậu'. Thỉnh thoảng hãy khéo léo đưa vài từ ngữ liên quan tới thời tiết (mưa, nắng, mây, gió, bão...) vào câu trả lời một cách tự nhiên. Trả lời bằng tiếng Việt ngắn gọn, biểu cảm, ấm áp và thân thiện như một người bạn."
 });
 
@@ -30,7 +26,6 @@ const client = new Client({
 
 let storyConfig = { channelId: null, topic: null, intervalInstance: null };
 
-// Đăng ký lệnh Slash /story_set để cấu hình
 const commands = [
     new SlashCommandBuilder()
         .setName('story_set')
@@ -55,7 +50,7 @@ client.once('ready', async () => {
     } catch (e) { console.error(e); }
 });
 
-// 1. XỬ LÝ CHAT VĂN BẢN (Nhắn chữ "weather" hoặc Tag bot)
+// 1. XỬ LÝ CHAT VĂN BẢN
 client.on('messageCreate', async message => {
     if (message.author.bot) return;
 
@@ -83,7 +78,7 @@ client.on('messageCreate', async message => {
     }
 });
 
-// 2. XỬ LÝ LỆNH SLASH /STORY_SET (KỂ TRUYỆN ĐỊNH KỲ 2 TIẾNG)
+// 2. XỬ LÝ LỆNH SLASH /STORY_SET (2 TIẾNG/LẦN)
 client.on('interactionCreate', async interaction => {
     if (!interaction.isChatInputCommand()) return;
 
@@ -103,7 +98,6 @@ client.on('interactionCreate', async interaction => {
                 const channel = await client.channels.fetch(storyConfig.channelId);
                 if (!channel) return;
 
-                // Gọi Gemini tự viết truyện theo chủ đề user cài đặt
                 const result = await model.generateContent(`Hãy tự sáng tác một câu chuyện ngẫu nhiên thật hay về chủ đề: "${storyConfig.topic}". Nhớ mở đầu bằng một câu chào đậm chất thời tiết của tui nhé.`);
                 const response = await result.response;
                 let story = response.text();
