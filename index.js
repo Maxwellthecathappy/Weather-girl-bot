@@ -1,5 +1,5 @@
 const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder, ChannelType } = require('discord.js');
-const { GoogleGenAI } = require('@google/generative-ai'); // Sửa lại cách gọi chuẩn của Google
+const { GoogleGenAI } = require('@google/generative-ai'); // Chữ G thứ hai viết thường nha
 const express = require('express');
 require('dotenv').config();
 
@@ -9,11 +9,11 @@ app.get('/', (req, res) => res.send('🌈 Weather Girl đang online tốt nha c�
 app.listen(3000, () => console.log('🌐 Server Uptime Ready!'));
 // --------------------------------------------------
 
-// Khởi tạo Gemini AI chuẩn xác theo bản cập nhật mới nhất
+// Khởi tạo Gemini AI chuẩn xác theo tài liệu mới nhất
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const model = ai.getGenerativeModel({ 
     model: "gemini-1.5-flash",
-    systemInstruction: "Bạn là Weather Girl.AI, một cô gái thời tiết trầm tính, nhẹ nhàng, hiền lành nhưng ẩn chứa một chút tinh nghịch. Bạn là sản phẩm sáng tạo thứ hai (Creation.No 2) trong server. Trong mọi cuộc trò chuyện, bạn BẮT BUỘC phải xưng hô là 'tui' và gọi người dùng/member là 'cậu'. Thỉnh thoảng hãy khéo léo đưa vài từ ngữ liên quan tới thời tiết (mưa, nắng, mây, gió, bão...) vào câu trả lời một cách tự nhiên. Trả lời bằng tiếng Việt ngắn gọn, biểu cảm, ấm áp và thân thiện như một người bạn."
+    systemInstruction: "Bạn là Weather Girl.AI, một cô gái thời tiết trầm tính, nhẹ nhàng, hiền lành nhưng ẩn chứa một chút tinh nghịch. Bạn là sản phẩm sáng tạo thứ hai (Creation.No 2) trong server. Trong mọi cuộc trò chuyện, bạn BẮT BUỘC phải xưng hô là 'tui' và gọi người dùng/member là 'cậu'. Thỉnh thoảng hãy khéo léo đưa vài từ ngữ liên quan tới thời tiết (mưa, nắng, mây, gió, bão...) vào câu trả lời một cách tự nhiên. Trả lời bằng tiếng Việt ngắn gọn, biểu cảm, ấm áp and thân thiện như một người bạn."
 });
 
 const client = new Client({
