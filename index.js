@@ -5,7 +5,7 @@ require('dotenv').config();
 
 // --- WEB SERVER & TỰ PING 24/7 TRÊN RENDER ---
 const app = express();
-const RENDER_URL = 'https://weather-girl-bot.onrender.com';
+const RENDER_URL = 'https://onrender.com';
 
 app.get('/', (req, res) => res.send('🌈 Weather Girl đang online tốt nha cậu!'));
 
@@ -78,7 +78,7 @@ client.on('messageCreate', async message => {
             const cleanPrompt = message.content.replace(/<@!?\d+>/g, '').trim();
 
             const response = await ai.models.generateContent({
-                model: "gemini-2.5-flash",
+                model: "gemini-3.8-flash",
                 contents: cleanPrompt || "Chào cậu!",
                 config: {
                     systemInstruction: SYSTEM_INSTRUCTION
@@ -118,7 +118,7 @@ client.on('interactionCreate', async interaction => {
                 if (!channel) return;
 
                 const response = await ai.models.generateContent({
-                    model: "gemini-2.5-flash",
+                    model: "gemini-3.8-flash",
                     contents: `Hãy tự sáng tác một câu chuyện ngẫu nhiên thật hay về chủ đề: "${storyConfig.topic}". Nhớ mở đầu bằng một câu chào đậm chất thời tiết của tui nhé.`,
                     config: {
                         systemInstruction: SYSTEM_INSTRUCTION
