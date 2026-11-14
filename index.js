@@ -3,10 +3,25 @@ const { GoogleGenAI } = require('@google/genai');
 const express = require('express');
 require('dotenv').config();
 
-// --- WEB SERVER GIÚP TREO BOT ONLINE 24/7 TRÊN RENDER ---
+// --- WEB SERVER & TỰ PING 24/7 TRÊN RENDER ---
 const app = express();
+const RENDER_URL = 'https://weather-girl-bot.onrender.com';
+
 app.get('/', (req, res) => res.send('🌈 Weather Girl đang online tốt nha cậu!'));
-app.listen(process.env.PORT || 3000, () => console.log('🌐 Server Uptime Ready!'));
+
+app.listen(process.env.PORT || 3000, () => {
+    console.log('🌐 Server Uptime Ready!');
+    
+    // Tự động ping chính mình mỗi 4 phút (240.000ms) để chống ngủ đông
+    setInterval(async () => {
+        try {
+            await fetch(RENDER_URL);
+            console.log('🔄 Đã tự ping giữ thức thành công!');
+        } catch (err) {
+            console.error('⚠️ Lỗi tự ping:', err.message);
+        }
+    }, 4 * 60 * 1000);
+});
 // -------------------------------------------------------
 
 // Khởi tạo Gemini AI chuẩn theo thư viện @google/genai mới
@@ -39,13 +54,13 @@ const commands = [
                 .setRequired(true))
 ].map(cmd => cmd.toJSON());
 
-client.once('ready', async () => {
+client.once('clientReady', async () => {
     console.log(`🤖 Weather Girl.AI (Gemini) đã online: ${client.user.tag}`);
     const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
     try {
         await rest.put(Routes.applicationCommands(client.user.id), { body: commands });
         console.log('✅ Đã đồng bộ lệnh Slash /story_set');
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error('❌ Lỗi đồng bộ lệnh Slash:', e); }
 });
 
 // 1. XỬ LÝ CHAT VĂN BẢN
@@ -76,7 +91,7 @@ client.on('messageCreate', async message => {
             
             await message.reply({ content: reply, allowedMentions: { repliedUser: true } });
         } catch (error) {
-            console.error(error);
+            console.error('❌ Lỗi gọi Gemini:', error);
             await message.reply('⚠️ Bầu trời AI đang gặp chút bão dông rồi. Thử lại sau nhé cậu!');
         }
     }
@@ -114,7 +129,7 @@ client.on('interactionCreate', async interaction => {
 
                 if (story.length > 2000) story = story.substring(0, 1990) + "...";
                 await channel.send(`📖 **[Bản Tin Truyện Định Kỳ]**\n\n${story}`);
-            } catch (err) { console.error("Lỗi tự động gửi truyện:", err); }
+            } catch (err) { console.error("❌ Lỗi tự động gửi truyện:", err); }
         };
 
         const TWO_HOURS = 2 * 60 * 60 * 1000;
@@ -122,4 +137,11 @@ client.on('interactionCreate', async interaction => {
     }
 });
 
-client.login(process.env.DISCORD_TOKEN);
+// 3. ĐĂNG NHẬP VÀ BẮT LỖI CHI TIẾT
+console.log('⏳ Đang kết nối tới Discord...');
+if (!process.env.DISCORD_TOKEN) {
+    console.error('❌ LỖI: Chưa tìm thấy biến môi trường DISCORD_TOKEN trên Render!');
+} else {
+    client.login(process.env.DISCORD_TOKEN)
+        .catch(err => console.error('❌ Lỗi đăng nhập Discord:', err));
+}
