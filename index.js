@@ -1,20 +1,18 @@
 const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder, ChannelType } = require('discord.js');
-const { GoogleGenAI } = require('@google/generative-ai'); // Chữ G thứ hai viết thường nha
+const { GoogleGenAI } = require('@google/genai');
 const express = require('express');
 require('dotenv').config();
 
-// --- 4 DÒNG WEB SERVER GIÚP TREO BOT ONLINE 24/7 TRÊN CLOUD ---
+// --- WEB SERVER GIÚP TREO BOT ONLINE 24/7 TRÊN RENDER ---
 const app = express();
 app.get('/', (req, res) => res.send('🌈 Weather Girl đang online tốt nha cậu!'));
-app.listen(3000, () => console.log('🌐 Server Uptime Ready!'));
-// --------------------------------------------------
+app.listen(process.env.PORT || 3000, () => console.log('🌐 Server Uptime Ready!'));
+// -------------------------------------------------------
 
-// Khởi tạo Gemini AI chuẩn xác theo tài liệu mới nhất
+// Khởi tạo Gemini AI chuẩn theo thư viện @google/genai mới
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-const model = ai.getGenerativeModel({ 
-    model: "gemini-1.5-flash",
-    systemInstruction: "Bạn là Weather Girl.AI, một cô gái thời tiết trầm tính, nhẹ nhàng, hiền lành nhưng ẩn chứa một chút tinh nghịch. Bạn là sản phẩm sáng tạo thứ hai (Creation.No 2) trong server. Trong mọi cuộc trò chuyện, bạn BẮT BUỘC phải xưng hô là 'tui' và gọi người dùng/member là 'cậu'. Thỉnh thoảng hãy khéo léo đưa vài từ ngữ liên quan tới thời tiết (mưa, nắng, mây, gió, bão...) vào câu trả lời một cách tự nhiên. Trả lời bằng tiếng Việt ngắn gọn, biểu cảm, ấm áp and thân thiện như một người bạn."
-});
+
+const SYSTEM_INSTRUCTION = "Bạn là Weather Girl.AI, một cô gái thời tiết trầm tính, nhẹ nhàng, hiền lành nhưng ẩn chứa một chút tinh nghịch. Bạn là sản phẩm sáng tạo thứ hai (Creation.No 2) trong server. Trong mọi cuộc trò chuyện, bạn BẮT BUỘC phải xưng hô là 'tui' và gọi người dùng/member là 'cậu'. Thỉnh thoảng hãy khéo léo đưa vài từ ngữ liên quan tới thời tiết (mưa, nắng, mây, gió, bão...) vào câu trả lời một cách tự nhiên. Trả lời bằng tiếng Việt ngắn gọn, biểu cảm, ấm áp và thân thiện như một người bạn.";
 
 const client = new Client({
     intents: [
@@ -62,11 +60,17 @@ client.on('messageCreate', async message => {
         await message.channel.sendTyping();
 
         try {
-            const cleanPrompt = message.content.replace(`<@${client.user.id}>`, '').trim();
+            const cleanPrompt = message.content.replace(/<@!?\d+>/g, '').trim();
 
-            const result = await model.generateContent(cleanPrompt || "Chào cậu!");
-            const response = await result.response;
-            let reply = response.text();
+            const response = await ai.models.generateContent({
+                model: "gemini-2.5-flash",
+                contents: cleanPrompt || "Chào cậu!",
+                config: {
+                    systemInstruction: SYSTEM_INSTRUCTION
+                }
+            });
+
+            let reply = response.text;
 
             if (reply.length > 2000) reply = reply.substring(0, 1990) + "...";
             
@@ -98,9 +102,15 @@ client.on('interactionCreate', async interaction => {
                 const channel = await client.channels.fetch(storyConfig.channelId);
                 if (!channel) return;
 
-                const result = await model.generateContent(`Hãy tự sáng tác một câu chuyện ngẫu nhiên thật hay về chủ đề: "${storyConfig.topic}". Nhớ mở đầu bằng một câu chào đậm chất thời tiết của tui nhé.`);
-                const response = await result.response;
-                let story = response.text();
+                const response = await ai.models.generateContent({
+                    model: "gemini-2.5-flash",
+                    contents: `Hãy tự sáng tác một câu chuyện ngẫu nhiên thật hay về chủ đề: "${storyConfig.topic}". Nhớ mở đầu bằng một câu chào đậm chất thời tiết của tui nhé.`,
+                    config: {
+                        systemInstruction: SYSTEM_INSTRUCTION
+                    }
+                });
+
+                let story = response.text;
 
                 if (story.length > 2000) story = story.substring(0, 1990) + "...";
                 await channel.send(`📖 **[Bản Tin Truyện Định Kỳ]**\n\n${story}`);
